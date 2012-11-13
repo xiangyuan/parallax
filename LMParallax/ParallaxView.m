@@ -22,13 +22,16 @@
 {
     UIScrollView * _backgroundScrollView;
     UIScrollView * transparentScrollView;
-    UIView * transparentView;
+    UIView * maskView;
     UIView * backgroundView;
+    UIView * floatTopView;
+    CGRect topRect;
 }
 
 -(id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
+        self.backgroundColor = [UIColor clearColor];
         _backgroundScrollView  = [[UIScrollView alloc]initWithFrame:CGRectZero];
         _backgroundScrollView.backgroundColor = [UIColor clearColor];
         _backgroundScrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -72,11 +75,6 @@
         backgroundView = [_delegate parallaxViewOfItem:self atIndex:0];
         backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         backgroundView.frame = CGRectMake(deltaX, floorf((height - backgroundView.frame.size.height)/ 2), backgroundView.frame.size.width, frameHeight);
-        backgroundView.userInteractionEnabled = YES;
-        UITapGestureRecognizer * gesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(perItemClicked:)];
-        [gesture setNumberOfTapsRequired:1];
-        [gesture setNumberOfTouchesRequired:1];
-        [backgroundView addGestureRecognizer:gesture];
         [_backgroundScrollView addSubview:backgroundView];
     }
     // transpaent layer
@@ -85,10 +83,10 @@
     }
     //transparent view the show view
     transparentScrollView.frame = self.bounds;
-    [transparentScrollView canCancelContentTouches];
-    transparentView.frame = CGRectMake(0.f, height, transparentView.frame.size.width, self.frame.size.height);
+    floatTopView.frame = topRect;
+    maskView.frame = CGRectMake(0.f, height, maskView.frame.size.width, self.frame.size.height);
     transparentScrollView.backgroundColor = [UIColor clearColor];
-    transparentScrollView.contentSize = CGSizeMake(self.frame.size.width, height + transparentView.frame.size.height);
+    transparentScrollView.contentSize = CGSizeMake(self.frame.size.width, height + maskView.frame.size.height);
 }
 
 -(void)setAutoresizingMask:(UIViewAutoresizing)autoresizingMask {
@@ -97,9 +95,16 @@
     [transparentScrollView setAutoresizingMask:autoresizingMask];
 }
 #pragma mark -- transparent layer 
--(void)transparentViewLayer:(UIView*) mContentView {
-    transparentView = mContentView;
-    [transparentScrollView addSubview:transparentView];
+-(void)maskViewCover:(UIView*) mContentView {
+    maskView = mContentView;
+    [transparentScrollView addSubview:maskView];
+}
+
+-(void)floatLayerView:(UIView *)floatView {
+    floatTopView = floatView;
+    topRect = floatTopView.frame;
+    floatTopView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
+    [transparentScrollView addSubview:floatTopView];
 }
 
 #pragma mark -- scroll delegate
@@ -141,10 +146,10 @@
      return FALSE;
 }
 
-#pragma mark -- update the offset 
+#pragma mark -- update the offset
 -(void) parallaxEffect {
-     CGFloat height = [_delegate heightOfParallaxViewOfItem:self];
-     CGFloat offsetY = transparentScrollView.contentOffset.y;
+    CGFloat height = [_delegate heightOfParallaxViewOfItem:self];
+    CGFloat offsetY = transparentScrollView.contentOffset.y;
     CGFloat offsetX = transparentScrollView.contentOffset.x;
     CGFloat transparentToTop = [_delegate heightOfTransparentLayer:self];
     CGFloat threshold = transparentToTop - height;
@@ -155,16 +160,23 @@
             _backgroundScrollView.contentOffset = CGPointMake(offsetX, offsetY + floorf(threshold / 2));
         } else {
             //是同一方向负值
+            if (floatTopView) {
+                [UIView animateWithDuration:.2 animations:^{
+                    CGFloat centerX = topRect.origin.x + topRect.size.width / 2;
+                    CGFloat centerY = topRect.origin.y + topRect.size.height / 2;
+                    floatTopView.center = CGPointMake(centerX, centerY + offsetY);
+                }];
+            }
             _backgroundScrollView.contentOffset = CGPointMake(offsetX, floorf(offsetY / 2));
         }
     }
 }
-#pragma mark -- the picture item clicked
--(void) perItemClicked:(id) sender {
-    UITapGestureRecognizer *gesture = (UITapGestureRecognizer*) sender;
-    UIView * touchView = gesture.view;
-    if ([_delegate respondsToSelector:@selector(performItemClicked:atIndex:)]) {
-        [_delegate performItemClicked:self atIndex:touchView.tag];
-    }
-}
+//#pragma mark -- the picture item clicked
+//-(void) perItemClicked:(id) sender {
+//    UITapGestureRecognizer *gesture = (UITapGestureRecognizer*) sender;
+//    UIView * touchView = gesture.view;
+//    if ([_delegate respondsToSelector:@selector(performItemClicked:atIndex:)]) {
+//        [_delegate performItemClicked:self atIndex:touchView.tag];
+//    }
+//}
 @end

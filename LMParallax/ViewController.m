@@ -30,11 +30,20 @@
     view.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     table.backgroundColor = [UIColor magentaColor];
     table.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    UIButton * btn = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    btn.frame = CGRectMake(60.f, 50.f, 120.f, 40.f);
+    [btn setTitle:@"clicked" forState:UIControlStateNormal];
+    [btn addTarget:self action:@selector(clicked:) forControlEvents:UIControlEventTouchUpInside];
+    [view floatLayerView:btn];
 //    table.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
-    [view transparentViewLayer:table];
+    [view maskViewCover:table];
     view.datasource = self;
     view.delegate = self;
     [self.view addSubview:view];
+}
+
+-(void) clicked:(id)sender {
+    NSLog(@"message...");
 }
 
 - (void)didReceiveMemoryWarning
@@ -44,6 +53,7 @@
 }
 #pragma mark -- delegate of the parallax view
 -(NSInteger)numbersOfParallax:(ParallaxView *)contentView {
+    //if count > 1 now have problem
     return 1;
 }
 

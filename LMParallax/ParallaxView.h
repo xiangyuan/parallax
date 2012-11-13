@@ -46,9 +46,6 @@
 
 @interface ParallaxView : UIView
 
-//@property(nonatomic,retain) NSMutableArray * d;
-
-//@property(nonatomic,retain) UIScrollView * scrollView;
 //
 @property(nonatomic,unsafe_unretained) id<UIScrollViewDelegate> scrollDelegate;
 //
@@ -58,8 +55,14 @@
 
 
 /*
- * get the transparent layer view
+ * set the transparent layer view
  */
--(void)transparentViewLayer:(UIView*) mContentView;
+-(void)maskViewCover:(UIView*) mContentView;
+
+/*
+ * set the top float layer view
+ */
+-(void) floatLayerView:(UIView *) floatView;
+
 
 @end
